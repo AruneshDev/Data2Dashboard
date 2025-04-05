@@ -44,6 +44,7 @@ function VisualizationPage() {
       const imageBlob = new Blob([response.data], { type: 'image/png' });
       const imageObjectUrl = URL.createObjectURL(imageBlob);
       setImageUrl(imageObjectUrl);
+      setErrorMessage("");  // Clear any previous error
     } catch {
       setErrorMessage("Error generating visualization.");
     } finally {
@@ -54,7 +55,7 @@ function VisualizationPage() {
   return (
     <div>
       <h2>Visualization</h2>
-      {errorMessage && <p>{errorMessage}</p>}
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       <FileUpload handleFileChange={handleFileChange} />
       <ChartOptions 
         chartType={chartType} setChartType={setChartType} 
@@ -62,10 +63,10 @@ function VisualizationPage() {
         yAxis={yAxis} setYAxis={setYAxis} 
         columns={columns} 
       />
-      <button onClick={handleVisualization}>
+      <button onClick={handleVisualization} disabled={loading}>
         {loading ? "Generating..." : "Generate Visualization"}
       </button>
-      {imageUrl && <Visualization imageUrl={imageUrl} />}
+      <Visualization imageUrl={imageUrl} loading={loading} />
     </div>
   );
 }
