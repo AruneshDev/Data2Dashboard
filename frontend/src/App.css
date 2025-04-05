@@ -110,3 +110,29 @@ h3 {
     padding: 5px;
   }
 }
+.dashboard {
+  padding: 20px;
+}
+
+.dashboard h2 {
+  text-align: center;
+}
+
+.dashboard div {
+  margin: 10px 0;
+}
+
+.stat-card {
+  background-color: #f4f7fa;
+  padding: 15px;
+  margin: 5px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+}
