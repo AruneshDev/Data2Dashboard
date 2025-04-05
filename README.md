@@ -3,8 +3,9 @@
 
 ## 📊 Create Insightful Visualizations from Your Data in Seconds
 
-Data to Dashboard is a web application that allows you to quickly upload CSV data and generate visualizations such as bar charts, line charts, scatter plots, and pie charts. The app is designed to be user-friendly and responsive, making it easy to analyze data from any device.
----
+### Data to Dashboard is a web application that allows you to quickly upload CSV data and generate visualizations such as bar charts, line charts, scatter plots, and pie charts. The app is designed to be user-friendly and responsive, making it easy to analyze data from any device.
+
+--- 
 
 ![Project Cover](Visualization.png)
 
