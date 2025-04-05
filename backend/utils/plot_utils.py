@@ -2,12 +2,11 @@ import matplotlib.pyplot as plt
 import io
 from fastapi.responses import StreamingResponse
 
-# Function to format the plot
 def format_plot(ax, chart_type, x_axis, y_axis, data_length):
     plt.title(f"{chart_type.capitalize()} Chart of {y_axis} vs {x_axis}")
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
-
+    plt.legend(title=y_axis, loc='best')  # Ensuring the legend appears
     # Adjust x-ticks if there are too many
     if data_length > 20:
         tick_spacing = max(1, data_length // 20)
