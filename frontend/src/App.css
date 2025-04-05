@@ -54,12 +54,15 @@ h2 {
   padding: 10px;
   background-color: #f9f9f9;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 /* Visualization Image */
 .visualization-image {
-  width: 600px;
-  height: 400px;
+  max-width: 100%;
+  height: auto;
   margin-top: 10px;
   border-radius: 5px;
   object-fit: contain;
@@ -98,11 +101,12 @@ h3 {
   }
 
   .visualization-image {
-    width: 100%;
+    max-width: 100%;
     height: auto;
   }
 
   .visualization-wrapper {
+    max-width: 90%;  /* Adjust for smaller screens */
     padding: 5px;
   }
 }
