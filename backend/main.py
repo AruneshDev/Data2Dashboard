@@ -1,78 +1,109 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
-import uvicorn
-from io import BytesIO
-from typing import List
-import json
-from pydantic import BaseModel
 import matplotlib.pyplot as plt
-import seaborn as sns
-import os
+import io
 
 app = FastAPI()
 
-# CORS configuration
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  
+    allow_methods=["*"],  
+    allow_headers=["*"],  
 )
 
-# Directory for storing visualizations
-if not os.path.exists("visualizations"):
-    os.makedirs("visualizations")
-
-class VisualizationRequest(BaseModel):
-    chart_type: str
-    x_axis: str
-    y_axis: str
+@app.get("/")
+async def root():
+    return JSONResponse(content={"message": "Welcome to Data to Dashboard API"})
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     try:
-        contents = await file.read()
-        if file.filename.endswith('.csv'):
-            data = pd.read_csv(BytesIO(contents))
-        elif file.filename.endswith(('.xls', '.xlsx')):
-            data = pd.read_excel(BytesIO(contents))
-        else:
-            return {"error": "Unsupported file format"}
-
-        info = {
-            "columns": data.columns.tolist(),
-            "shape": data.shape
-        }
-        data.to_csv("uploaded_data.csv", index=False)
-        return {"message": "File uploaded successfully", "info": info}
-
+        df = pd.read_csv(file.file)
+        columns = df.columns.tolist()
+        return {"message": "File uploaded successfully", "columns": columns, "shape": df.shape}
     except Exception as e:
-        return {"error": str(e)}
-
+        raise HTTPException(status_code=400, detail=str(e))
 @app.post("/visualize")
-async def create_visualization(request: VisualizationRequest):
+async def visualize(
+    chart_type: str = Form(...),
+    x_axis: str = Form(...),
+    y_axis: str = Form(...),
+    file: UploadFile = File(...)
+):
     try:
-        data = pd.read_csv("uploaded_data.csv")
-        plt.figure(figsize=(8, 5))
+        df = pd.read_csv(file.file)
 
-        if request.chart_type == "bar":
-            sns.barplot(x=data[request.x_axis], y=data[request.y_axis])
-        elif request.chart_type == "line":
-            sns.lineplot(x=data[request.x_axis], y=data[request.y_axis])
-        elif request.chart_type == "scatter":
-            sns.scatterplot(x=data[request.x_axis], y=data[request.y_axis])
+        plt.figure(figsize=(12, 6))
+        
+        # Plotting based on chart type
+        if chart_type == "bar":
+            ax = df.plot(kind="bar", x=x_axis, y=y_axis, figsize=(12, 6), legend=True)
+        elif chart_type == "line":
+            ax = df.plot(kind="line", x=x_axis, y=y_axis, figsize=(12, 6), legend=True)
+        elif chart_type == "scatter":
+            ax = df.plot(kind="scatter", x=x_axis, y=y_axis, figsize=(12, 6), legend=True)
         else:
-            return {"error": "Unsupported chart type"}
+            raise HTTPException(status_code=400, detail="Unsupported chart type")
 
-        filepath = f"visualizations/{request.chart_type}.png"
-        plt.savefig(filepath)
+        # Improve x-axis tick frequency
+        max_ticks = 20  # Maximum number of x-ticks to display
+        tick_spacing = max(1, len(df) // max_ticks)
+        ax.set_xticks(range(0, len(df), tick_spacing))
+
+        # Set title and labels
+        plt.title(f"{chart_type.capitalize()} Chart of {y_axis} vs {x_axis}")
+        plt.xlabel(x_axis)
+        plt.ylabel(y_axis)
+
+        # Rotate x-axis labels for better readability
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+
+        # Save plot to a bytes buffer
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
         plt.close()
+        buf.seek(0)
 
-        return {"message": "Visualization created successfully", "filepath": filepath}
-
+        return StreamingResponse(buf, media_type="image/png")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# @app.post("/visualize")
+# async def visualize(
+#     chart_type: str = Form(...),
+#     x_axis: str = Form(...),
+#     y_axis: str = Form(...),
+#     file: UploadFile = File(...)
+# ):
+#     try:
+#         df = pd.read_csv(file.file)
+
+#         plt.figure(figsize=(12, 6))
+#         if chart_type == "bar":
+#             df.plot(kind="bar", x=x_axis, y=y_axis, figsize=(12, 6), legend=True)
+#         elif chart_type == "line":
+#             df.plot(kind="line", x=x_axis, y=y_axis, figsize=(12, 6), legend=True)
+#         elif chart_type == "scatter":
+#             df.plot(kind="scatter", x=x_axis, y=y_axis, figsize=(12, 6), legend=True)
+#         else:
+#             raise HTTPException(status_code=400, detail="Unsupported chart type")
+
+#         plt.title(f"{chart_type.capitalize()} Chart of {y_axis} vs {x_axis}")
+#         plt.xlabel(x_axis)
+#         plt.ylabel(y_axis)
+#         plt.xticks(rotation=45, ha='right')
+#         plt.tight_layout()
+
+#         buf = io.BytesIO()
+#         plt.savefig(buf, format='png')
+#         plt.close()
+#         buf.seek(0)
+
+#         return StreamingResponse(buf, media_type="image/png")
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
